@@ -1,36 +1,10 @@
-use std::fs::File;
-use std::io::Read;
+mod fs;
+mod get_paths;
 
-use actix_web::{get, App, HttpServer, Responder};
-
-fn read_json(path: &str) -> String {
-    let mut contents = String::new();
-    File::open(path)
-        .expect("failed to open file")
-        .read_to_string(&mut contents)
-        .expect("failed to get content from file");
-    contents
-}
-
-#[get("/client/v4/user")]
-async fn handle_user() -> String {
-    format!("done")
-}
-
-#[get("/client/v4/memberships")]
-async fn handle_memberships() -> String {
-    read_json("./src/defaultResponses/get_memberships.json")
-}
-
-#[get("/client/v4/accounts/{accounts}/workers/subdomain")]
-async fn handle_subdomain() -> String {
-    read_json("./src/defaultResponses/get_subdomain.json")
-}
-
-#[get("/client/v4/accounts/{accounts}/workers/services/{services}")]
-async fn handle_accounts_services() -> String {
-    read_json("./src/defaultResponses/get_accounts_services.json")
-}
+use crate::get_paths::{
+    handle_accounts_services, handle_memberships, handle_subdomain, handle_user,
+};
+use actix_web::{App, HttpServer, Responder};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
