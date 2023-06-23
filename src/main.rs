@@ -20,15 +20,17 @@ async fn save_file(mut payload: actix_web::web::Payload) -> Result<HttpResponse,
     let file_name = format!("uploaded_file_{}", "index.js");
 
     // Chemin de destination pour enregistrer le fichier
-    let mut file_result = File::create(&file_name).await;
 
-    let mut body = web::BytesMut::new();
     while let Some(chunk) = payload.next().await {
         let chunk = chunk?;
+        let mut body = web::BytesMut::new();
         body.extend_from_slice(&chunk);
+        let _ = File::create(&file_name)
+            .await?
+            .write_all(body.as_ref())
+            .await;
     }
 
-    let _ = file_result?.write_all(body.as_ref()).await;
     // Call the `write_all` method on the file
 
     Ok(HttpResponse::Ok().body(read_json(
