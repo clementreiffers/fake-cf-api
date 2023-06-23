@@ -1,3 +1,4 @@
+use actix_web::web::Buf;
 use actix_web::{web, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
 use tokio::fs::File;
@@ -21,10 +22,14 @@ async fn save_file(mut payload: actix_web::web::Payload) -> Result<HttpResponse,
     // Chemin de destination pour enregistrer le fichier
     let mut file_result = File::create(&file_name).await;
 
-    let data = b"Hello, World!";
+    let mut body = web::BytesMut::new();
+    while let Some(chunk) = payload.next().await {
+        let chunk = chunk?;
+        body.extend_from_slice(&chunk);
+    }
 
+    let _ = file_result?.write_all(body.as_ref()).await;
     // Call the `write_all` method on the file
-    let _ = file_result?.write_all(data).await;
 
     Ok(HttpResponse::Ok().body(read_json(
         "./src/defaultResponses/put_accounts_scripts.json",
