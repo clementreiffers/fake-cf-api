@@ -1,3 +1,4 @@
+use actix_multipart::Multipart;
 use actix_web::web::Buf;
 use actix_web::{web, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
@@ -15,20 +16,36 @@ mod get_services;
 mod post_services;
 mod put_services;
 
-async fn save_file(mut payload: actix_web::web::Payload) -> Result<HttpResponse, Error> {
+async fn save_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
     // payload is a stream of Bytes objects
     let file_name = format!("uploaded_file_{}", "index.js");
 
     // Chemin de destination pour enregistrer le fichier
 
-    while let Some(chunk) = payload.next().await {
-        let chunk = chunk?;
-        let mut body = web::BytesMut::new();
+    while let Some(field) = payload.next().await {
+        let field = field?;
+        let filename = match field.content_disposition().get_filename() {
+            None => "",
+            Some(f) => f,
+        };
+        println!("{}", filename);
+
+        /* let mut body = web::BytesMut::new();
         body.extend_from_slice(&chunk);
         let _ = File::create(&file_name)
             .await?
             .write_all(body.as_ref())
-            .await;
+            .await;*/
+        /*let destination = format!("./{}", filename);
+
+        // Ouverture d'un nouveau fichier pour écrire les données téléchargées
+        let mut file = match File::create(&destination).await {
+            Ok(file) => file,
+            Err(_) => {
+                return Ok(HttpResponse::InternalServerError()
+                    .body("Erreur lors de la création du fichier."));
+            }
+        }*/
     }
 
     // Call the `write_all` method on the file
