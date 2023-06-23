@@ -17,38 +17,20 @@ mod post_services;
 mod put_services;
 
 async fn save_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
-    // payload is a stream of Bytes objects
-    let file_name = format!("uploaded_file_{}", "index.js");
-
-    // Chemin de destination pour enregistrer le fichier
-
-    while let Some(field) = payload.next().await {
-        let field = field?;
+    while let Some(mut field) = payload.next().await {
+        let mut field = field.expect("failed to get fields");
         let filename = match field.content_disposition().get_filename() {
             None => "",
             Some(f) => f,
         };
         println!("{}", filename);
-
-        /* let mut body = web::BytesMut::new();
-        body.extend_from_slice(&chunk);
-        let _ = File::create(&file_name)
-            .await?
-            .write_all(body.as_ref())
-            .await;*/
-        /*let destination = format!("./{}", filename);
-
-        // Ouverture d'un nouveau fichier pour écrire les données téléchargées
-        let mut file = match File::create(&destination).await {
-            Ok(file) => file,
-            Err(_) => {
-                return Ok(HttpResponse::InternalServerError()
-                    .body("Erreur lors de la création du fichier."));
-            }
-        }*/
+        while let Some(chunk) = field.next().await {
+            let mut body = web::BytesMut::new();
+            let chunk = chunk.expect("failed to get chunk");
+            body.extend_from_slice(&chunk);
+            let _ = File::create(filename).await?.write_all(body.as_ref()).await;
+        }
     }
-
-    // Call the `write_all` method on the file
 
     Ok(HttpResponse::Ok().body(read_json(
         "./src/defaultResponses/put_accounts_scripts.json",
