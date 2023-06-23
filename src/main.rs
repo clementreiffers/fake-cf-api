@@ -1,10 +1,7 @@
-use std::fs::File;
-use std::io::Write;
-
 use actix_web::{web, App, Error, HttpResponse, HttpServer};
-use futures::{StreamExt, TryStreamExt};
-use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
+use futures::StreamExt;
+use tokio::fs::File;
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 use crate::fs::read_json;
 use crate::get_services::{
@@ -19,24 +16,16 @@ mod put_services;
 
 async fn save_file(mut payload: actix_web::web::Payload) -> Result<HttpResponse, Error> {
     // payload is a stream of Bytes objects
-    let mut body = web::BytesMut::new();
-    while let Some(chunk) = payload.next().await {
-        let chunk = chunk?;
-        // limit max size of in-memory payload
-        body.extend_from_slice(&chunk);
-    }
-
-    // Génération d'un nom de fichier unique
-    let file_name = format!("/uploads/uploaded_file_{}", "index.js");
+    let file_name = format!("uploaded_file_{}", "index.js");
 
     // Chemin de destination pour enregistrer le fichier
-    let destination = format!("./{}", file_name);
+    let mut file_result = File::create(&file_name).await;
 
-    // Ouverture d'un nouveau fichier pour écrire les données téléchargées
-    /* File::create(&destination)
-            .write_all(&body)
-            .expect("cannot write into file");
-    */
+    let data = b"Hello, World!";
+
+    // Call the `write_all` method on the file
+    let _ = file_result?.write_all(data).await;
+
     Ok(HttpResponse::Ok().body(read_json(
         "./src/defaultResponses/put_accounts_scripts.json",
     )))
