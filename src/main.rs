@@ -1,4 +1,4 @@
-use actix_multipart::Multipart;
+use actix_multipart::{Field, Multipart};
 use actix_web::web::Buf;
 use actix_web::{web, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
@@ -16,19 +16,33 @@ mod get_services;
 mod post_services;
 mod put_services;
 
+fn get_filename_from_field(field: &Field) -> &str {
+    match field.content_disposition().get_filename() {
+        None => "",
+        Some(f) => f,
+    }
+}
+
+async fn get_file_content(field: &mut Field) -> web::BytesMut {
+    let mut body = web::BytesMut::new();
+    while let Some(chunk) = field.next().await {
+        let chunk = chunk.expect("failed to get chunk");
+        body.extend_from_slice(&chunk);
+    }
+    body
+}
+
 async fn save_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
-    while let Some(mut field) = payload.next().await {
-        let mut field = field.expect("failed to get fields");
-        let filename = match field.content_disposition().get_filename() {
-            None => "",
-            Some(f) => f,
-        };
-        println!("{}", filename);
-        while let Some(chunk) = field.next().await {
-            let mut body = web::BytesMut::new();
-            let chunk = chunk.expect("failed to get chunk");
-            body.extend_from_slice(&chunk);
-            let _ = File::create(filename).await?.write_all(body.as_ref()).await;
+    while let Some(field) = payload.next().await {
+        let mut f = field.expect("failed to get fields");
+
+        let file_content = get_file_content(&mut f).await;
+        let filename = get_filename_from_field(&f);
+        if filename != "" {
+            let _ = File::create(filename)
+                .await?
+                .write_all(file_content.as_ref())
+                .await;
         }
     }
 
