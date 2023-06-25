@@ -1,9 +1,11 @@
 use actix_multipart::{Field, Multipart};
-use actix_web::web::Buf;
+use actix_web::web::{Buf, BytesMut};
 use actix_web::{web, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
-use tokio::fs::File;
+use regex::Regex;
+use tokio::fs::{write, File};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
+use uuid::Bytes;
 
 use crate::fs::read_json;
 use crate::get_services::{
@@ -23,8 +25,13 @@ fn get_filename_from_field(field: &Field) -> &str {
     }
 }
 
-async fn get_file_content(field: &mut Field) -> web::BytesMut {
-    let mut body = web::BytesMut::new();
+fn is_correct_filename(filename: &str) -> bool {
+    let regex = Regex::new(r#"(?i)\.(mjs|js|wasm)$"#).unwrap();
+    filename != "" && regex.is_match(filename)
+}
+
+async fn get_file_content(field: &mut Field) -> BytesMut {
+    let mut body: BytesMut = BytesMut::new();
     while let Some(chunk) = field.next().await {
         let chunk = chunk.expect("failed to get chunk");
         body.extend_from_slice(&chunk);
@@ -36,13 +43,11 @@ async fn save_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
     while let Some(field) = payload.next().await {
         let mut f = field.expect("failed to get fields");
 
-        let file_content = get_file_content(&mut f).await;
-        let filename = get_filename_from_field(&f);
-        if filename != "" {
-            let _ = File::create(filename)
-                .await?
-                .write_all(file_content.as_ref())
-                .await;
+        let file_content: BytesMut = get_file_content(&mut f).await;
+        let filename: &str = get_filename_from_field(&f);
+
+        if is_correct_filename(filename) {
+            write(filename, &file_content).await?;
         }
     }
 
