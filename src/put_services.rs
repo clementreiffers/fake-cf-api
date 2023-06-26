@@ -1,8 +1,9 @@
 use actix_multipart::{Field, Multipart};
-use actix_web::web::{BytesMut, Path};
+use actix_web::web::{BytesMut, Json, Path};
 use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
 use regex::Regex;
+use serde_json::{json, Value};
 
 use crate::fs::read_json;
 use crate::upload::upload;
@@ -49,4 +50,24 @@ pub async fn save_file(
     Ok(HttpResponse::Ok().body(read_json(
         "./src/defaultResponses/put_accounts_scripts.json",
     )))
+}
+
+fn generate_new_secret_message(secret_name: String, success: bool) -> serde_json::Value {
+    return json!({
+      "result": {
+        "name": secret_name,
+        "type": "secret_text"
+      },
+      "success": success,
+      "errors": [],
+      "messages": []
+    });
+}
+
+#[put("/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
+pub async fn new_secret() -> Result<HttpResponse, Error> {
+    let secret_name = "TEST".to_owned();
+
+    let message = generate_new_secret_message(secret_name, true);
+    Ok(HttpResponse::Ok().body(message.to_string()))
 }

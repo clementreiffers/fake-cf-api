@@ -8,6 +8,8 @@ actix-multipart = "0.6.0"
 actix-web = "4.3.1"
 dotenv = "0.15.0"
 futures = "0.3.28"
+k8s-openapi = { version = "0.18.0", features = ["v1_26"] }
+kube = "0.83.0"
 regex = "1.8.4"
 rusoto_core = "0.48.0"
 rusoto_s3 = "0.48.0"
