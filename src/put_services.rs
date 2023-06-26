@@ -5,9 +5,11 @@ use actix_web::web::{Bytes, BytesMut, Path};
 use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
+use kube::api::PostParams;
+use kube::Api;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 
 use crate::fs::read_json;
 use crate::upload::upload;
@@ -56,7 +58,7 @@ pub async fn save_file(
     )))
 }
 
-fn generate_new_secret_message(secret_name: &String, success: bool) -> serde_json::Value {
+fn generate_new_secret_message(secret_name: &str, success: bool) -> serde_json::Value {
     json!({
       "result": {
         "name": secret_name,
@@ -68,40 +70,56 @@ fn generate_new_secret_message(secret_name: &String, success: bool) -> serde_jso
     })
 }
 
-fn create_secret(
-    name: &String,
-    text: String,
-    secret_type: &String,
-) -> k8s_openapi::api::core::v1::Secret {
-    let mut string_data = BTreeMap::new();
-    string_data.insert(name.into(), text);
+#[derive(Serialize, Deserialize, Debug)]
+struct Data<'a> {
+    #[serde(borrow)]
+    name: &'a str,
+    #[serde(borrow)]
+    text: &'a str,
+    #[serde(rename = "type", borrow)]
+    type_: &'a str,
+}
+
+fn create_string_data(values: &Data) -> BTreeMap<String, String> {
+    let mut string_data: BTreeMap<String, String> = BTreeMap::new();
+    string_data.insert(values.name.parse().unwrap(), values.text.parse().unwrap());
+    string_data
+}
+
+fn create_secret(values: &Data) -> k8s_openapi::api::core::v1::Secret {
     k8s_openapi::api::core::v1::Secret {
+        string_data: Some(create_string_data(&values)),
+        type_: Some(values.type_.into()),
         metadata: ObjectMeta {
-            name: Some(name.into()),
+            name: Some(values.name.into()),
             ..Default::default()
         },
-        string_data: Some(string_data),
-        type_: Some(secret_type.into()),
         ..Default::default()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Data {
-    name: String,
-    text: String,
-    #[serde(rename = "type")]
-    type_: String,
+async fn create_kube_client() -> kube::Client {
+    kube::Client::try_default()
+        .await
+        .expect("Failed to create client")
 }
 
 #[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
-pub async fn new_secret(path: Path<(String, String)>, bytes: Bytes) -> Result<HttpResponse, Error> {
+pub async fn new_secret(path: Path<(String, String)>, bytes: Bytes) -> HttpResponse {
     let (accounts, scripts) = path.into_inner();
-    let mut text = String::from_utf8(bytes.to_vec()).expect("failed to cast Bytes to String");
-    let values: Data = serde_json::from_str(text.as_mut_str()).expect("failed to deserialize");
-    println!("{}", values.type_);
-    //let secret = create_secret(&name, text, &secret_type);
-    let name = "sg".to_string();
-    let message = generate_new_secret_message(&name, true);
-    Ok(HttpResponse::Ok().body(message.to_string()))
+    let values: Data = serde_json::from_slice(&bytes).expect("failed to deserialize");
+    let secret = create_secret(&values);
+
+    let client = create_kube_client().await;
+
+    let pods: Api<k8s_openapi::api::core::v1::Secret> = Api::namespaced(client, "default");
+    let result = pods.create(&PostParams::default(), &secret).await.is_ok();
+
+    let message = generate_new_secret_message(values.name, result);
+
+    match result {
+        true => println!("adding secrets for accounts {accounts}.{scripts} done!"),
+        false => println!("cannot adding secrets for {accounts}.{scripts} failed"),
+    };
+    HttpResponse::Ok().body(message.to_string())
 }
