@@ -34,6 +34,7 @@ pub async fn save_file(
     path: Path<(String, String)>,
 ) -> Result<HttpResponse, Error> {
     let (accounts, scripts) = path.into_inner();
+
     while let Some(field) = payload.next().await {
         let mut f = field.expect("failed to get fields");
 
