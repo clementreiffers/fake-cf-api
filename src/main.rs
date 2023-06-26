@@ -10,6 +10,7 @@ mod fs;
 mod get_services;
 mod post_services;
 mod put_services;
+mod upload;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
