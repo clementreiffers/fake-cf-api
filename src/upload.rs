@@ -1,4 +1,4 @@
-use actix_web::web::{Bytes, BytesMut};
+use actix_web::web::BytesMut;
 use rusoto_core::{ByteStream, Region};
 use rusoto_s3::{PutObjectRequest, S3Client, StreamingBody, S3};
 

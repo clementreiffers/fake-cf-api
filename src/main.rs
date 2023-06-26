@@ -1,6 +1,4 @@
 use actix_web::{App, HttpServer};
-use rusoto_core::Region;
-use rusoto_s3::{PutObjectRequest, S3Client, S3};
 
 use crate::get_services::{
     handle_accounts_services, handle_memberships, handle_subdomain, handle_user,

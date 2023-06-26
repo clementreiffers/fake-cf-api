@@ -1,10 +1,8 @@
 use actix_multipart::{Field, Multipart};
-use actix_web::web::{Bytes, BytesMut, Path};
+use actix_web::web::{BytesMut, Path};
 use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
 use regex::Regex;
-use tokio::fs::write;
-use tokio_util::codec;
 
 use crate::fs::read_json;
 use crate::upload::upload;
@@ -43,7 +41,6 @@ pub async fn save_file(
         let path = format!("{}/{}/{}", accounts, scripts, get_filename_from_field(&f));
 
         if is_correct_filename(&path) {
-            //write(filename, &file_content).await?;
             upload(&path, file_content).await;
         }
     }
