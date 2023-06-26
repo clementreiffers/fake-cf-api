@@ -1,5 +1,5 @@
 use actix_multipart::{Field, Multipart};
-use actix_web::web::{Bytes, BytesMut};
+use actix_web::web::{Bytes, BytesMut, Path};
 use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
 use regex::Regex;
@@ -12,13 +12,13 @@ use crate::upload::upload;
 fn get_filename_from_field(field: &Field) -> &str {
     match field.content_disposition().get_filename() {
         None => "",
-        Some(f) => f,
+        Some(f) => f.trim_start_matches("./"),
     }
 }
 
-fn is_correct_filename(filename: &str) -> bool {
+fn is_correct_filename(filename: &String) -> bool {
     let regex = Regex::new(r#"(?i)\.(mjs|js|wasm)$"#).unwrap();
-    filename != "" && regex.is_match(filename)
+    filename != "" && regex.is_match(filename.as_str())
 }
 
 async fn get_file_content(field: &mut Field) -> BytesMut {
@@ -31,16 +31,20 @@ async fn get_file_content(field: &mut Field) -> BytesMut {
 }
 
 #[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}")]
-pub async fn save_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
+pub async fn save_file(
+    mut payload: Multipart,
+    path: Path<(String, String)>,
+) -> Result<HttpResponse, Error> {
+    let (accounts, scripts) = path.into_inner();
     while let Some(field) = payload.next().await {
         let mut f = field.expect("failed to get fields");
 
         let file_content = get_file_content(&mut f).await;
-        let filename: &str = get_filename_from_field(&f);
+        let path = format!("{}/{}/{}", accounts, scripts, get_filename_from_field(&f));
 
-        if is_correct_filename(filename) {
+        if is_correct_filename(&path) {
             //write(filename, &file_content).await?;
-            upload(filename, file_content).await;
+            upload(&path, file_content).await;
         }
     }
 
