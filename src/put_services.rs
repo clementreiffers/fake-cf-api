@@ -64,7 +64,7 @@ fn generate_new_secret_message(secret_name: String, success: bool) -> serde_json
     });
 }
 
-#[put("/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
+#[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
 pub async fn new_secret() -> Result<HttpResponse, Error> {
     let secret_name = "TEST".to_owned();
 
