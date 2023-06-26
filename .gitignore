@@ -1,2 +1,6 @@
 /target
 /uploads
+*.wasm
+*.js
+*.mjs
+*.ts
