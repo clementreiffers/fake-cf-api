@@ -53,7 +53,7 @@ pub async fn save_file(
 }
 
 fn generate_new_secret_message(secret_name: String, success: bool) -> serde_json::Value {
-    return json!({
+    json!({
       "result": {
         "name": secret_name,
         "type": "secret_text"
@@ -61,7 +61,7 @@ fn generate_new_secret_message(secret_name: String, success: bool) -> serde_json
       "success": success,
       "errors": [],
       "messages": []
-    });
+    })
 }
 
 #[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
