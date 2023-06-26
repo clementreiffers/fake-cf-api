@@ -1,6 +1,6 @@
 use actix_multipart::{Field, Multipart};
 use actix_web::web::BytesMut;
-use actix_web::{App, Error, HttpResponse, HttpServer};
+use actix_web::{put, App, Error, HttpResponse, HttpServer};
 use futures::StreamExt;
 use regex::Regex;
 use tokio::fs::write;
@@ -28,6 +28,7 @@ async fn get_file_content(field: &mut Field) -> BytesMut {
     body
 }
 
+#[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}")]
 pub async fn save_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
     while let Some(field) = payload.next().await {
         let mut f = field.expect("failed to get fields");

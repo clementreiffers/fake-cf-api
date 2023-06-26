@@ -20,10 +20,7 @@ async fn main() -> std::io::Result<()> {
             .service(handle_subdomain)
             .service(handle_accounts_services)
             .service(handle_accounts_scripts)
-            .route(
-                "/client/v4/accounts/{accounts}/workers/scripts/{scripts}",
-                web::put().to(save_file),
-            )
+            .service(save_file)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
