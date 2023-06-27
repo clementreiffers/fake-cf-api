@@ -1,20 +1,10 @@
-use actix_web::web::Path;
 use actix_web::{get, web, HttpResponse};
 use kube::api::ListParams;
-use kube::{Api, Resource};
+use kube::Api;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::routes::kube::create_kube_client;
-
-fn generate_new_message(success: bool, result: String) -> serde_json::Value {
-    json!({
-        "result": result,
-        "success": success,
-        "errors": [],
-        "messages": []
-    })
-}
 
 #[derive(Serialize, Deserialize)]
 struct SecretInfo {
