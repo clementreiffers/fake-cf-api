@@ -8,6 +8,8 @@ use kube::Api;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use crate::routes::kube::create_kube_client;
+
 fn generate_new_secret_message(secret_name: &str, success: bool) -> serde_json::Value {
     json!({
       "result": {
@@ -36,29 +38,35 @@ fn create_string_data(values: &Data) -> BTreeMap<String, String> {
     string_data
 }
 
-fn create_secret(values: &Data) -> k8s_openapi::api::core::v1::Secret {
+fn create_labels(accounts: String, scripts: String) -> BTreeMap<String, String> {
+    let mut string_data: BTreeMap<String, String> = BTreeMap::new();
+    string_data.insert("accounts".to_string(), accounts);
+    string_data.insert("scripts".to_string(), scripts);
+    string_data
+}
+
+fn create_secret(
+    values: &Data,
+    accounts: &String,
+    scripts: &String,
+) -> k8s_openapi::api::core::v1::Secret {
     k8s_openapi::api::core::v1::Secret {
-        string_data: Some(create_string_data(&values)),
+        string_data: Some(create_string_data(values)),
         type_: Some(values.type_.into()),
         metadata: ObjectMeta {
             name: Some(values.name.into()),
+            labels: Some(create_labels(accounts.into(), scripts.into())),
             ..Default::default()
         },
         ..Default::default()
     }
 }
 
-async fn create_kube_client() -> kube::Client {
-    kube::Client::try_default()
-        .await
-        .expect("Failed to create client")
-}
-
 #[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
 pub async fn new_secret(path: Path<(String, String)>, bytes: Bytes) -> HttpResponse {
     let (accounts, scripts) = path.into_inner();
     let values: Data = serde_json::from_slice(&bytes).expect("failed to deserialize");
-    let secret = create_secret(&values);
+    let secret = create_secret(&values, &accounts, &scripts);
 
     let client = create_kube_client().await;
 
