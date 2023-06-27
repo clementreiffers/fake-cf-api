@@ -1,5 +1,5 @@
-use actix_web::get;
 use actix_web::web::Path;
+use actix_web::{get, web, HttpResponse};
 use kube::api::ListParams;
 use kube::{Api, Resource};
 use serde::{Deserialize, Serialize};
@@ -16,14 +16,15 @@ fn generate_new_message(success: bool, result: String) -> serde_json::Value {
     })
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Labels {
-    accounts: String,
-    scripts: String,
+#[derive(Serialize, Deserialize)]
+struct SecretInfo {
+    name: String,
+    #[serde(rename = "type")]
+    type_: String,
 }
 
 #[get("/client/v4/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
-pub async fn get_secrets_list(path: Path<(String, String)>) -> String {
+pub async fn get_secrets_list(path: web::Path<(String, String)>) -> HttpResponse {
     let (accounts, scripts) = path.into_inner();
 
     let label_selector = format!("accounts={},scripts={}", accounts, scripts);
@@ -32,16 +33,31 @@ pub async fn get_secrets_list(path: Path<(String, String)>) -> String {
     let secrets: Api<k8s_openapi::api::core::v1::Secret> = Api::all(client);
     let secret_list = secrets.list(&list_params).await;
 
-    let mut result: Vec<serde_json::Value> = vec![];
+    let result: Result<Vec<_>, _> = secret_list
+        .map(|secret| {
+            secret
+                .items
+                .into_iter()
+                .map(|item| SecretInfo {
+                    name: item.metadata.name.expect("failed to get name"),
+                    type_: item.type_.expect("failed to get type"),
+                })
+                .collect()
+        })
+        .map_err(|err| {
+            eprintln!("Error retrieving secrets: {:?}", err);
+            err
+        });
 
-    if let Ok(secret) = secret_list {
-        for items in secret.items {
-            let name = format!("{:?}", items.metadata.name.expect("failed to get name"));
-            let type_ = format!("{:?}", items.type_.expect("failed to get type"));
+    match result {
+        Ok(secrets) => {
+            let response = json!({
+                "success": true,
+                "result": secrets,
+            });
 
-            result.push(json!({"name":name, "type":type_}));
+            HttpResponse::Ok().body(response.to_string())
         }
+        Err(_) => HttpResponse::InternalServerError().finish(),
     }
-    let result = serde_json::to_string(&result).expect("failed to convert result to string");
-    generate_new_message(true, result).to_string()
 }
