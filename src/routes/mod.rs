@@ -1,3 +1,4 @@
+pub mod delete;
 mod fs;
 pub mod get;
 mod kube;
