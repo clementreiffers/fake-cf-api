@@ -3,6 +3,7 @@ use actix_web::web::{BytesMut, Path};
 use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
 use regex::Regex;
+use serde_json::json;
 
 use crate::routes::fs::read_json;
 use crate::routes::put::upload::upload;
@@ -28,6 +29,32 @@ async fn get_file_content(field: &mut Field) -> BytesMut {
     body
 }
 
+fn generate_message(success: bool) -> serde_json::Value {
+    json!({
+      "result": {
+        "created_on": "2023-04-11T09:04:26.21742Z",
+        "modified_on": "2023-06-01T16:45:57.89535Z",
+        "id": "hello",
+        "tag": "0c2ca8c2d4d44b2490074d7a979899e1",
+        "tags": [],
+        "deployment_id": "fa2ed69c548e4bd0a742b08e4c43d42b",
+        "tail_consumers": null,
+        "logpush": false,
+        "etag": "f1b79de5c4b1af431ffbd80dcc8883429003af5359704900dd8ee6860aa904f3",
+        "handlers": [
+          "fetch"
+        ],
+        "last_deployed_from": "wrangler",
+        "compatibility_date": "2023-04-11",
+        "usage_model": "bundled",
+        "available_on_subdomain": true
+      },
+      "success": success,
+      "errors": [],
+      "messages": []
+    })
+}
+
 #[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}")]
 pub async fn save_file(
     mut payload: Multipart,
@@ -43,10 +70,10 @@ pub async fn save_file(
 
         if is_correct_filename(&path) {
             upload(&path, file_content).await;
+        } else {
+            return Ok(HttpResponse::Ok().body(generate_message(false).to_string()));
         }
     }
 
-    Ok(HttpResponse::Ok().body(read_json(
-        "./src/routes/defaultResponses/put_accounts_scripts.json",
-    )))
+    Ok(HttpResponse::Ok().body(generate_message(true).to_string()))
 }
