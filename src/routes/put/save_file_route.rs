@@ -5,7 +5,6 @@ use futures::StreamExt;
 use regex::Regex;
 use serde_json::json;
 
-use crate::routes::fs::read_json;
 use crate::routes::put::upload::upload;
 
 fn get_filename_from_field(field: &Field) -> &str {
