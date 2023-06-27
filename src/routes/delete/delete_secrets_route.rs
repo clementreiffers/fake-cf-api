@@ -25,13 +25,10 @@ pub async fn delete_secrets(path: web::Path<(String, String, String)>) -> HttpRe
             .find(|item| item.metadata.name == Some(secret_name.clone()))
         {
             let dp = DeleteParams::default();
-            if kube_secret
+            success = kube_secret
                 .delete(&secret.metadata.name.unwrap(), &dp)
                 .await
-                .is_ok()
-            {
-                success = true;
-            }
+                .is_ok();
         }
     }
 
