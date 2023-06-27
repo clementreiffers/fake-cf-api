@@ -8,6 +8,8 @@ use kube::Api;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use crate::routes::kube::create_kube_client;
+
 fn generate_new_secret_message(secret_name: &str, success: bool) -> serde_json::Value {
     json!({
       "result": {
@@ -58,12 +60,6 @@ fn create_secret(
         },
         ..Default::default()
     }
-}
-
-async fn create_kube_client() -> kube::Client {
-    kube::Client::try_default()
-        .await
-        .expect("Failed to create client")
 }
 
 #[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}/secrets")]
