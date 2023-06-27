@@ -1,12 +1,10 @@
 use actix_web::{App, HttpServer};
 
-use crate::routes::post::handle_accounts_scripts;
 use routes::get::{handle_accounts_services, handle_memberships, handle_subdomain, handle_user};
+use routes::post::handle_accounts_scripts;
 use routes::put::{new_secret, save_file};
 
-mod fs;
 mod routes;
-mod upload;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

@@ -4,8 +4,8 @@ use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
 use regex::Regex;
 
-use crate::fs::read_json;
-use crate::upload::upload;
+use crate::routes::fs::read_json;
+use crate::routes::put::upload::upload;
 
 fn get_filename_from_field(field: &Field) -> &str {
     match field.content_disposition().get_filename() {
@@ -47,6 +47,6 @@ pub async fn save_file(
     }
 
     Ok(HttpResponse::Ok().body(read_json(
-        "./src/defaultResponses/put_accounts_scripts.json",
+        "./src/routes/defaultResponses/put_accounts_scripts.json",
     )))
 }
