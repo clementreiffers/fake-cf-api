@@ -38,10 +38,11 @@ fn create_string_data(values: &Data) -> BTreeMap<String, String> {
     string_data
 }
 
-fn create_labels(accounts: String, scripts: String) -> BTreeMap<String, String> {
+fn create_labels(accounts: String, scripts: String, values: &Data) -> BTreeMap<String, String> {
     let mut string_data: BTreeMap<String, String> = BTreeMap::new();
     string_data.insert("accounts".to_string(), accounts);
     string_data.insert("scripts".to_string(), scripts);
+    string_data.insert("name".to_string(), values.name.parse().unwrap());
     string_data
 }
 
@@ -54,8 +55,8 @@ fn create_secret(
         string_data: Some(create_string_data(values)),
         type_: Some(values.type_.into()),
         metadata: ObjectMeta {
-            name: Some(values.name.into()),
-            labels: Some(create_labels(accounts.into(), scripts.into())),
+            name: Option::from(format!("{}.{}.{}", accounts, scripts, values.name)),
+            labels: Some(create_labels(accounts.into(), scripts.into(), values)),
             ..Default::default()
         },
         ..Default::default()

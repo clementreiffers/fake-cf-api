@@ -6,6 +6,8 @@ use routes::get::{
 use routes::post::handle_accounts_scripts;
 use routes::put::{new_secret, save_file};
 
+use crate::routes::delete::delete_secrets;
+
 mod routes;
 
 #[actix_web::main]
@@ -20,6 +22,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_secrets_list)
             .service(save_file)
             .service(new_secret)
+            .service(delete_secrets)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
