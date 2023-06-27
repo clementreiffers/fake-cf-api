@@ -1,22 +1,22 @@
 use actix_web::{App, HttpServer};
 
-use put::{new_secret, save_file};
+use crate::routes::post::handle_accounts_scripts;
+use routes::get::{handle_accounts_services, handle_memberships, handle_subdomain, handle_user};
+use routes::put::{new_secret, save_file};
 
 mod fs;
-mod get_services;
-mod post_services;
-mod put;
+mod routes;
 mod upload;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(get_services::handle_user)
-            .service(get_services::handle_memberships)
-            .service(get_services::handle_subdomain)
-            .service(get_services::handle_accounts_services)
-            .service(post_services::handle_accounts_scripts)
+            .service(handle_user)
+            .service(handle_memberships)
+            .service(handle_subdomain)
+            .service(handle_accounts_services)
+            .service(handle_accounts_scripts)
             .service(save_file)
             .service(new_secret)
     })
