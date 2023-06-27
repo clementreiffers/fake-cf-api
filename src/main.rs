@@ -1,15 +1,11 @@
 use actix_web::{App, HttpServer};
 
-use crate::get_services::{
-    handle_accounts_services, handle_memberships, handle_subdomain, handle_user,
-};
-use crate::post_services::handle_accounts_scripts;
-use crate::put_services::save_file;
+use crate::routes::post::handle_accounts_scripts;
+use routes::get::{handle_accounts_services, handle_memberships, handle_subdomain, handle_user};
+use routes::put::{new_secret, save_file};
 
 mod fs;
-mod get_services;
-mod post_services;
-mod put_services;
+mod routes;
 mod upload;
 
 #[actix_web::main]
@@ -22,6 +18,7 @@ async fn main() -> std::io::Result<()> {
             .service(handle_accounts_services)
             .service(handle_accounts_scripts)
             .service(save_file)
+            .service(new_secret)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

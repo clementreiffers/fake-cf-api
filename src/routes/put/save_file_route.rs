@@ -16,7 +16,7 @@ fn get_filename_from_field(field: &Field) -> &str {
 
 fn is_correct_filename(filename: &String) -> bool {
     let regex = Regex::new(r#"(?i)\.(mjs|js|wasm)$"#).unwrap();
-    filename != "" && regex.is_match(filename.as_str())
+    !filename.is_empty() && regex.is_match(filename.as_str())
 }
 
 async fn get_file_content(field: &mut Field) -> BytesMut {
@@ -34,6 +34,7 @@ pub async fn save_file(
     path: Path<(String, String)>,
 ) -> Result<HttpResponse, Error> {
     let (accounts, scripts) = path.into_inner();
+
     while let Some(field) = payload.next().await {
         let mut f = field.expect("failed to get fields");
 
