@@ -2,7 +2,6 @@ use actix_web::{delete, web, HttpResponse};
 use k8s_openapi::api::core::v1::Secret;
 use kube::api::{DeleteParams, ListParams};
 use kube::Api;
-use kube::Client;
 use serde_json::json;
 
 use crate::routes::kube::create_kube_client;
@@ -11,6 +10,7 @@ use crate::routes::kube::create_kube_client;
 pub async fn delete_secrets(path: web::Path<(String, String, String)>) -> HttpResponse {
     let (accounts, scripts, secrets) = path.into_inner();
     let secret_name = format!("{}.{}.{}", accounts, scripts, secrets);
+    let mut success = false;
 
     let client = create_kube_client().await;
     let kube_secret: Api<Secret> = Api::namespaced(client.clone(), "default");
@@ -25,16 +25,16 @@ pub async fn delete_secrets(path: web::Path<(String, String, String)>) -> HttpRe
         let name = items.metadata.name.expect("failed to get name");
         if name == secret_name {
             let dp = DeleteParams::default();
-            kube_secret
-                .delete(&*name, &dp)
-                .await
-                .expect("failed to delete secret");
+            success = match kube_secret.delete(&*name, &dp).await {
+                Ok(_) => true,
+                Err(_) => false,
+            }
         }
     }
 
     let response = json!({
         "result": null,
-        "success": true,
+        "success": success,
         "errors": [],
         "messages": []
     });
