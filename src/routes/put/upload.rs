@@ -37,7 +37,6 @@ pub async fn upload(path: &String, file_content: BytesMut) {
         body: Some(create_streaming_body(file_content)),
         ..Default::default()
     };
-
     match client.put_object(request).await {
         Ok(_) => {
             println!("{path} upload succeed !");

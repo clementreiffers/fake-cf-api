@@ -66,11 +66,8 @@ pub async fn save_file(
 
         let file_content = get_file_content(&mut f).await;
         let path = format!("{}/{}/{}", accounts, scripts, get_filename_from_field(&f));
-
         if is_correct_filename(&path) {
             upload(&path, file_content).await;
-        } else {
-            return Ok(HttpResponse::Ok().body(generate_message(false).to_string()));
         }
     }
 
