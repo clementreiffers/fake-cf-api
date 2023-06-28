@@ -14,7 +14,7 @@ fn create_streaming_body(file_content: BytesMut) -> ByteStream {
     StreamingBody::new(ByteStream::new_with_size(StreamingBody::new(stream), len))
 }
 
-pub async fn upload(path: &String, file_content: BytesMut) {
+pub async fn upload(path: &String, file_content: BytesMut) -> bool {
     dotenv().ok();
 
     let access_key: String = env::var("ACCESS_KEY").expect("Missing AWS access key ID.");
@@ -38,11 +38,7 @@ pub async fn upload(path: &String, file_content: BytesMut) {
         ..Default::default()
     };
     match client.put_object(request).await {
-        Ok(_) => {
-            println!("{path} upload succeed !");
-        }
-        Err(e) => {
-            eprintln!("Error while uploading {path} : {:?}", e);
-        }
+        Ok(_) => true,
+        Err(_) => false,
     }
 }
