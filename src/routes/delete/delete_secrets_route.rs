@@ -1,10 +1,9 @@
+use crate::kube_crd::create_kube_client;
 use actix_web::{delete, web, HttpResponse};
 use k8s_openapi::api::core::v1::Secret;
 use kube::api::{DeleteParams, ListParams};
 use kube::Api;
 use serde_json::json;
-
-use crate::routes::kube::create_kube_client;
 
 #[delete("/client/v4/accounts/{accounts}/workers/scripts/{scripts}/secrets/{secrets}")]
 pub async fn delete_secrets(path: web::Path<(String, String, String)>) -> HttpResponse {

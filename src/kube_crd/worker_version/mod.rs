@@ -8,13 +8,13 @@ use serde::{Deserialize, Serialize};
 #[kube(
     group = "api.cf-worker",
     version = "v1",
-    kind = "worker_version",
+    kind = "WorkerVersion",
     namespaced
 )]
 pub struct WorkerVersionSpec {
-    accounts: String,
-    scripts: String,
-    url: String,
+    pub(crate) accounts: String,
+    pub(crate) scripts: String,
+    pub(crate) url: String,
 }
 
 pub async fn kube_update_worker_version(

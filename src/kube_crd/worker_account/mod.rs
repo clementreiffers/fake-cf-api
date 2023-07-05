@@ -22,7 +22,7 @@ struct WorkerAccountPodTemplate {
 #[kube(
     group = "api.cf-worker",
     version = "v1",
-    kind = "worker_account",
+    kind = "WorkerAccount",
     namespaced
 )]
 pub struct WorkerAccountSpec {
