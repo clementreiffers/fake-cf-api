@@ -1,5 +1,4 @@
 #![recursion_limit = "256"]
-
 use actix_web::{App, HttpServer};
 
 use routes::get::{get_secrets_list, handle_accounts_services, handle_subdomain, handle_user};

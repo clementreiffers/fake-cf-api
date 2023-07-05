@@ -4,5 +4,8 @@ COPY ./ ./
 
 RUN cargo build --release
 
-CMD ["./target/release/rust-fake-cf-api"]
+FROM rust as runner
 
+COPY --from=builder ./target/release/rust-fake-cf-api ./
+
+CMD ["./rust-fake-cf-api"]
