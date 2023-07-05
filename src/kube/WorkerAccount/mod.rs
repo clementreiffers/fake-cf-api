@@ -63,6 +63,6 @@ pub async fn kube_get_worker_account(
     api.get(&worker_account.name_any()).await.is_ok()
 }
 
-pub fn workerAccountFactory(name: &str, spec: WorkerAccountSpec) -> WorkerAccount {
+pub fn worker_account_factory(name: &str, spec: WorkerAccountSpec) -> WorkerAccount {
     WorkerAccount::new(name, spec)
 }
