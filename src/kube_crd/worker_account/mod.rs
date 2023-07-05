@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use kube::api::{Patch, PatchParams, PostParams};
-use kube::{Api, Client, ResourceExt};
+use kube::{Api, ResourceExt};
 use kube_derive::CustomResource;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ struct WorkerAccountPodTemplate {
 #[kube(
     group = "api.cf-worker",
     version = "v1",
-    kind = "WorkerAccount",
+    kind = "worker_account",
     namespaced
 )]
 pub struct WorkerAccountSpec {

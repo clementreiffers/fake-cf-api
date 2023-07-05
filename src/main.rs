@@ -8,8 +8,8 @@ use routes::put::{new_secret, save_file};
 use crate::routes::delete::delete_secrets;
 use crate::routes::get::handle_memberships;
 
+mod kube_crd;
 mod routes;
-mod kube;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
