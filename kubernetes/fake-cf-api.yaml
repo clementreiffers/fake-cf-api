@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fake-cf-api-pod
+  labels:
+    app: fake-cf-api-pod
+spec:
+  containers:
+    - name: fake-cf-api
+      image: clementreiffers/fake-cf-api
+      ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-cf-api-svc
+spec:
+  selector:
+    app: fake-cf-api-pod
+  clusterIP: None
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fake-cf-api-ing
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: "fake-cf-api.127.0.0.1.sslip.io"
+      http:
+        paths:
+          - backend:
+              service:
+                name: fake-cf-api-svc
+            path: fake-cf-api-ing
+            pathType: "Prefix"

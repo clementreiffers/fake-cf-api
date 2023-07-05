@@ -1,17 +1,19 @@
+#![recursion_limit = "256"]
 use actix_web::{App, HttpServer};
 
-use routes::get::{
-    get_secrets_list, handle_accounts_services, handle_memberships, handle_subdomain, handle_user,
-};
+use routes::get::{get_secrets_list, handle_accounts_services, handle_subdomain, handle_user};
 use routes::post::handle_accounts_scripts;
 use routes::put::{new_secret, save_file};
 
 use crate::routes::delete::delete_secrets;
+use crate::routes::get::handle_memberships;
 
+mod kube_crd;
 mod routes;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    println!("listening...");
     HttpServer::new(|| {
         App::new()
             .service(handle_user)

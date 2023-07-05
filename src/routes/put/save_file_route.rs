@@ -1,10 +1,19 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use actix_multipart::{Field, Multipart};
 use actix_web::web::{BytesMut, Path};
 use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
+use kube::{Api, Client, ResourceExt};
 use regex::Regex;
 use serde_json::json;
 
+use crate::kube_crd::worker_account::WorkerAccount;
+use crate::kube_crd::worker_version::{WorkerVersion, WorkerVersionSpec};
+use crate::kube_crd::{
+    create_kube_client, kube_create_worker_version, kube_get_worker_account,
+    kube_get_worker_version, kube_update_worker_version, worker_version_factory,
+};
 use crate::routes::put::upload::upload;
 
 fn get_filename_from_field(field: &Field) -> &str {
@@ -14,9 +23,9 @@ fn get_filename_from_field(field: &Field) -> &str {
     }
 }
 
-fn is_correct_filename(filename: &String) -> bool {
+fn is_correct_filename(filename: &str) -> bool {
     let regex = Regex::new(r#"(?i)\.(mjs|js|wasm)$"#).unwrap();
-    !filename.is_empty() && regex.is_match(filename.as_str())
+    !filename.is_empty() && regex.is_match(filename)
 }
 
 async fn get_file_content(field: &mut Field) -> BytesMut {
@@ -60,19 +69,43 @@ pub async fn save_file(
     path: Path<(String, String)>,
 ) -> Result<HttpResponse, Error> {
     let (accounts, scripts) = path.into_inner();
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("failed to get timestamp")
+        .as_secs();
 
+    let path = format!("{}/{}/{}", &accounts, &scripts, &timestamp);
     while let Some(field) = payload.next().await {
         let mut f = field.expect("failed to get fields");
 
         let file_content = get_file_content(&mut f).await;
-        let path = format!("{}/{}/{}", accounts, scripts, get_filename_from_field(&f));
-
-        if is_correct_filename(&path) {
-            upload(&path, file_content).await;
-        } else {
-            return Ok(HttpResponse::Ok().body(generate_message(false).to_string()));
+        let filename = get_filename_from_field(&f);
+        let file_path = format!("{}/{}", path, filename);
+        if is_correct_filename(filename) {
+            let is_uploaded = upload(&file_path, file_content).await;
+            if !is_uploaded {
+                return Ok(HttpResponse::Ok().body(generate_message(false).to_string()));
+            }
         }
     }
+    let client = create_kube_client().await;
 
-    Ok(HttpResponse::Ok().body(generate_message(true).to_string()))
+    let worker_version = worker_version_factory(
+        format!("{}-{}-{}", accounts, scripts, timestamp).as_str(),
+        WorkerVersionSpec {
+            accounts,
+            scripts,
+            url: path,
+        },
+    );
+    let api: Api<WorkerVersion> = Api::default_namespaced(client);
+
+    let result: bool = match kube_get_worker_version(&api, &worker_version).await {
+        true => kube_update_worker_version(&api, &worker_version).await,
+        false => kube_create_worker_version(&api, &worker_version).await,
+    };
+
+    println!("all kube resources created? {}", result);
+
+    Ok(HttpResponse::Ok().body(generate_message(result).to_string()))
 }

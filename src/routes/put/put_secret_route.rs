@@ -8,7 +8,7 @@ use kube::Api;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::routes::kube::create_kube_client;
+use crate::kube_crd::create_kube_client;
 
 fn generate_new_secret_message(secret_name: &str, success: bool) -> serde_json::Value {
     json!({
