@@ -24,7 +24,7 @@ pub async fn kube_update_worker_version(
     worker_version: &WorkerVersion,
 ) -> bool {
     api.patch(
-        &worker_account.name_any(),
+        &worker_version.name_any(),
         &PatchParams::force(PatchParams::apply("api.cf-worker")),
         &Patch::Apply(&worker_version),
     )
