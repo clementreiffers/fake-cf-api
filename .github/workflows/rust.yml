@@ -61,10 +61,30 @@ jobs:
           name: artifact-alpine
           path: ./target/x86_64-unknown-linux-musl/release/rust-fake-cf-api
 
+  windows-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: installing toolchains
+        run: rustup target add x86_64-pc-windows-gnu
+
+      - name: installing mingw
+        run: sudo apt update && sudo apt install -y gcc-mingw-w64
+
+      - name: build
+        run: cargo build --target x86_64-pc-windows-gnu
+
+      - name: upload artifact release
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifact-windows
+          path: ./target/x86_64-pc-windows-gnu/release/rust-fake-cf-api.exe
+
   release-project:
     name: Release Project
     runs-on: ubuntu-latest
-    needs: [ build-macos, build-ubuntu, build-alpine ]
+    needs: [ build-macos, build-ubuntu, build-alpine, build-windows ]
     steps:
       - name: Create Release
         id: create_release
@@ -118,7 +138,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: artifact-alpine
-      - name: Archive macos release
+      - name: Archive alpine release
         uses: thedoctor0/zip-release@master
         with:
           filename: release-alpine.zip
@@ -130,5 +150,23 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: release-alpine.zip
           asset_name: release-alpine-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
+
+      - name: Download windows artifact content
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact-windows
+      - name: Archive windows release
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: release-windows.zip
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-windows.zip
+          asset_name: release-windows-v${{ github.run_number }}.zip
           asset_content_type: application/zip
 
