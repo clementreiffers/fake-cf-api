@@ -41,20 +41,6 @@ jobs:
           name: artifact-macos
           path: ./target/release/rust-fake-cf-api
 
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: build
-        run: cargo build --release
-
-      - name: upload artifact release
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifact-windows
-          path: ./target/release/rust-fake-cf-api.exe
-
   release-project:
     name: Release Project
     runs-on: ubuntu-latest
@@ -98,18 +84,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: artifact-macos
           asset_name: macos-fake-cf-api.app
-          asset_content_type: application/zip
-
-      - name: Download windows artifact content
-        uses: actions/download-artifact@v2
-        with:
-          name: artifact-windows
-      - name: Upload release asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifact-windows
-          asset_name: windows-fake-cf-api.exe
           asset_content_type: application/zip
