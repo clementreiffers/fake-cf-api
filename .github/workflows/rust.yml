@@ -61,7 +61,7 @@ jobs:
           name: artifact-alpine
           path: ./target/x86_64-unknown-linux-musl/release/rust-fake-cf-api
 
-  windows-build:
+  build-windows:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
