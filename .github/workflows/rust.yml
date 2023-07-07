@@ -41,6 +41,20 @@ jobs:
           name: artifact-macos
           path: ./target/release/rust-fake-cf-api
 
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: build
+        run: cargo build --release
+
+      - name: upload artifact release
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifact-windows
+          path: ./target/release/rust-fake-cf-api.exe
+
   release-project:
     name: Release Project
     runs-on: ubuntu-latest
@@ -62,34 +76,40 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: artifact-ubuntu
-      - name: Archive ubuntu release
-        uses: thedoctor0/zip-release@master
-        with:
-          filename: release-linux.tar.gz
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release-linux.tar.gz
-          asset_name: release-linux-v${{ github.run_number }}.tar.gz
+          asset_path: artifact-ubuntu
+          asset_name: linux-fake-cf-api.elf
           asset_content_type: application/zip
 
       - name: Download macos artifact content
         uses: actions/download-artifact@v2
         with:
           name: artifact-macos
-      - name: Archive macos release
-        uses: thedoctor0/zip-release@master
-        with:
-          filename: release-macos.tar.gz
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release-macos.tar.gz
-          asset_name: release-macos-v${{ github.run_number }}.tar.gz
+          asset_path: artifact-macos
+          asset_name: macos-fake-cf-api.app
+          asset_content_type: application/zip
+
+      - name: Download windows artifact content
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact-windows
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifact-windows
+          asset_name: windows-fake-cf-api.exe
           asset_content_type: application/zip
