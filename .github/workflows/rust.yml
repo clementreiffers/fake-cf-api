@@ -44,7 +44,7 @@ jobs:
   release-project:
     name: Release Project
     runs-on: ubuntu-latest
-    needs: [ build-windows, build-macos, build-ubuntu ]
+    needs: [ build-macos, build-ubuntu ]
     steps:
       - name: Create Release
         id: create_release
@@ -62,26 +62,35 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: artifact-ubuntu
+      - name: Archive ubuntu release
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: release-linux.zip
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifact-ubuntu
-          asset_name: ubuntu-fake-cf-api.elf
-          asset_content_type: application/octet-stream
+          asset_path: release-linux.zip
+          asset_name: release-linux-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
 
       - name: Download macos artifact content
         uses: actions/download-artifact@v2
         with:
           name: artifact-macos
+      - name: Archive macos release
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: release-macos.zip
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifact-macos
-          asset_name: macos-fake-cf-api.app
-          asset_content_type: application/octet-stream
+          asset_path: release-macos.zip
+          asset_name: release-macos-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
+
