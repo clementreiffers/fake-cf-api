@@ -41,10 +41,30 @@ jobs:
           name: artifact-macos
           path: ./target/release/rust-fake-cf-api
 
+  build-alpine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: installing toolchains
+        run: rustup target add x86_64-unknown-linux-musl
+
+      - name: installing musl-tools
+        run: apt-get update && apt-get install -y musl-tools
+
+      - name: build
+        run: cargo build --target=x86_64-unknown-linux-musl --release
+
+      - name: upload artifact release
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifact-alpine
+          path: ./target/x86_64-unknown-linux-musl/release/rust-fake-cf-api
+
   release-project:
     name: Release Project
     runs-on: ubuntu-latest
-    needs: [ build-windows, build-macos, build-ubuntu ]
+    needs: [ build-macos, build-ubuntu ]
     steps:
       - name: Create Release
         id: create_release
@@ -62,26 +82,53 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: artifact-ubuntu
+      - name: Archive ubuntu release
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: release-linux.zip
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifact-ubuntu
-          asset_name: ubuntu-fake-cf-api.elf
-          asset_content_type: application/octet-stream
+          asset_path: release-linux.zip
+          asset_name: release-linux-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
 
       - name: Download macos artifact content
         uses: actions/download-artifact@v2
         with:
           name: artifact-macos
+      - name: Archive macos release
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: release-macos.zip
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifact-macos
-          asset_name: macos-fake-cf-api.app
-          asset_content_type: application/octet-stream
+          asset_path: release-macos.zip
+          asset_name: release-macos-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
+
+      - name: Download alpine artifact content
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact-alpine
+      - name: Archive macos release
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: release-alpine.zip
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-alpine.zip
+          asset_name: release-alpine-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
+
