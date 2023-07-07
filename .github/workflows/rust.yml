@@ -58,7 +58,7 @@ jobs:
   release-project:
     name: Release Project
     runs-on: ubuntu-latest
-    needs: [ build-macos, build-ubuntu ]
+    needs: [ build-windows, build-macos, build-ubuntu ]
     steps:
       - name: Create Release
         id: create_release
