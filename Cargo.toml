@@ -16,6 +16,7 @@ kube = { version = "0.83.0", features = ["derive"] }
 kube-client = "0.83.0"
 kube-derive = "0.83.0"
 kube-runtime = "0.83.0"
+openssl = { version = "0.10.55", features = ["vendored"] }
 regex = "1.8.4"
 rusoto_core = "0.48.0"
 rusoto_s3 = "0.48.0"

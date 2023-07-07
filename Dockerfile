@@ -1,11 +1,13 @@
-FROM rust as builder
+FROM rust:latest AS builder
+
+RUN rustup target add x86_64-unknown-linux-musl
+RUN apt-get update && apt-get install -y musl-tools
 
 COPY ./ ./
 
-RUN cargo build --release
+RUN cargo build --target=x86_64-unknown-linux-musl --release
 
-FROM rust as runner
+FROM alpine AS runner
 
-COPY --from=builder ./target/release/rust-fake-cf-api ./
+COPY --from=builder /target/x86_64-unknown-linux-musl/release/rust-fake-cf-api ./
 
-CMD ["./rust-fake-cf-api"]
