@@ -1,10 +1,13 @@
 use std::env;
 
 use actix_web::web::BytesMut;
+use clap::Parser;
 use dotenv::dotenv;
 use rusoto_core::credential::{AwsCredentials, StaticProvider};
 use rusoto_core::{ByteStream, HttpClient, Region};
 use rusoto_s3::{PutObjectRequest, S3Client, StreamingBody, S3};
+
+use crate::args::{Args, S3Params};
 
 fn create_streaming_body(file_content: BytesMut) -> ByteStream {
     let len = file_content.len();
@@ -15,24 +18,23 @@ fn create_streaming_body(file_content: BytesMut) -> ByteStream {
 }
 
 pub async fn upload(path: &String, file_content: BytesMut) -> bool {
-    dotenv().ok();
+    let args = Args::parse();
 
-    let access_key: String = env::var("ACCESS_KEY").expect("Missing AWS access key ID.");
-    let secret_key: String = env::var("SECRET_KEY").expect("Missing AWS secret access key.");
-    let name: String = env::var("REGION").expect("Missing AWS Region.");
-    let endpoint: String = env::var("ENDPOINT").expect("Missing AWS Endpoint.");
-    let bucket: String = env::var("BUCKET_NAME").expect("Missing AWS Bucket Name.");
+    let s3_params = S3Params {
+        s3_endpoint: &*args.s3_endpoint,
+        s3_bucket_name: &*args.s3_bucket_name,
+        s3_region: &*args.s3_region,
+    };
 
-    let credentials: AwsCredentials = AwsCredentials::new(access_key, secret_key, None, None);
-    let provider: StaticProvider = StaticProvider::from(credentials);
+    let region: Region = Region::Custom {
+        name: s3_params.s3_region.parse().unwrap(),
+        endpoint: s3_params.s3_endpoint.parse().unwrap(),
+    };
 
-    let region: Region = Region::Custom { name, endpoint };
-    let dispatcher = HttpClient::new().expect("Failed to create request dispatcher");
-
-    let client: S3Client = S3Client::new_with(dispatcher, provider, region);
+    let client: S3Client = S3Client::new(region);
 
     let request = PutObjectRequest {
-        bucket,
+        bucket: s3_params.s3_bucket_name.parse().unwrap(),
         key: path.to_owned(),
         body: Some(create_streaming_body(file_content)),
         ..Default::default()

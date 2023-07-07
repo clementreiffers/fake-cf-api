@@ -8,6 +8,7 @@ use routes::put::{new_secret, save_file};
 use crate::routes::delete::delete_secrets;
 use crate::routes::get::handle_memberships;
 
+mod args;
 mod kube_crd;
 mod routes;
 
