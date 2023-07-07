@@ -70,7 +70,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: artifact-ubuntu
           asset_name: ubuntu-fake-cf-api.elf
-          asset_content_type: application/zip
+          asset_content_type: application/octet-stream
 
       - name: Download macos artifact content
         uses: actions/download-artifact@v2
@@ -84,4 +84,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: artifact-macos
           asset_name: macos-fake-cf-api.app
-          asset_content_type: application/zip
+          asset_content_type: application/octet-stream
