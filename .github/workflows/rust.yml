@@ -25,7 +25,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: artifact-ubuntu
-          path: ./target/release/fake-cf-api
+          path: ./target/release/rust-fake-cf-api
 
   build-macos:
     runs-on: macos-latest
@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: artifact-macos
-          path: ./target/release/fake-cf-api
+          path: ./target/release/rust-fake-cf-api
 
   release-project:
     name: Release Project
@@ -61,7 +61,7 @@ jobs:
         with:
           upload_url: ${{ steps.create-new-release.outputs.upload_url }}
           asset_path: release-linux.tar.gz
-          asset_name: fake-cf-api-v${{ github.run_number }}.tar.gz
+          asset_name: rust-fake-cf-api-v${{ github.run_number }}.tar.gz
           asset_content_type: application/zip
 
       - name: Download macos artifact content
@@ -79,5 +79,5 @@ jobs:
         with:
           upload_url: ${{ steps.create-new-release.outputs.upload_url }}
           asset_path: release-macos.tar.gz
-          asset_name: fake-cf-api-v${{ github.run_number }}.tar.gz
+          asset_name: rust-fake-cf-api-v${{ github.run_number }}.tar.gz
           asset_content_type: application/zip
