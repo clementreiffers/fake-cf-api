@@ -1,13 +1,15 @@
-FROM rust:latest AS builder
+ARG RELEASE_VERSION=20
 
-RUN rustup target add x86_64-unknown-linux-musl
-RUN apt-get update && apt-get install -y musl-tools
+FROM alpine:latest AS builder
+ARG RELEASE_VERSION
 
-COPY ./ ./
+RUN apk update && apk add curl unzip
 
-RUN cargo build --target=x86_64-unknown-linux-musl --release
+RUN curl -O -L https://github.com/clementreiffers/rust-fake-cf-api/releases/download/${RELEASE_VERSION}/release-alpine-v${RELEASE_VERSION}.zip
+
+RUN unzip release-alpine-v${RELEASE_VERSION}.zip
 
 FROM alpine AS runner
 
-COPY --from=builder /target/x86_64-unknown-linux-musl/release/rust-fake-cf-api ./
+COPY --from=builder ./rust-fake-cf-api ./
 
