@@ -5,3 +5,4 @@
 *.mjs
 *.ts
 .env
+.vs
