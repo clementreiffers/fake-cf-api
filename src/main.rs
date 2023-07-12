@@ -18,12 +18,10 @@ mod routes;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let app_data = Data::new(S3Params::parse());
-
     println!("listening...");
-    HttpServer::new(move || {
+    HttpServer::new(|| {
         App::new()
-            .app_data(app_data.clone())
+            .app_data(Data::new(S3Params::parse()))
             .service(get_base_message)
             .service(handle_user)
             .service(handle_memberships)
