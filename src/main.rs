@@ -20,16 +20,19 @@ mod routes;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let args: Args = Args::parse();
+
+    let s3_params: S3Params = S3Params {
+        s3_endpoint: &*args.s3_endpoint,
+        s3_bucket_name: &*args.s3_bucket_name,
+        s3_region: &*args.s3_region,
+    };
+    let app_data = Data::new(s3_params);
+
     println!("listening...");
-    HttpServer::new(|| {
-        let args = Args::parse();
-        let s3_params = Data::new(Mutex::new(S3Params {
-            s3_bucket_name: &args.s3_bucket_name.as_str(),
-            s3_endpoint: &*args.s3_endpoint,
-            s3_region: &*args.s3_region,
-        }));
+    HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::clone(&s3_params))
+            .app_data(app_data.clone())
             .service(get_base_message)
             .service(handle_user)
             .service(handle_memberships)

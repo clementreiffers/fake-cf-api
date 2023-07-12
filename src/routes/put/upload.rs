@@ -1,13 +1,13 @@
 use std::env;
 
-use actix_web::web::BytesMut;
+use actix_web::web::{BytesMut, Data};
 use clap::Parser;
 use dotenv::dotenv;
 use rusoto_core::credential::{AwsCredentials, StaticProvider};
 use rusoto_core::{ByteStream, HttpClient, Region};
 use rusoto_s3::{PutObjectRequest, S3Client, StreamingBody, S3};
 
-use crate::args::{Args, S3Params};
+use crate::args::S3Params;
 
 fn create_streaming_body(file_content: BytesMut) -> ByteStream {
     let len = file_content.len();
@@ -17,15 +17,11 @@ fn create_streaming_body(file_content: BytesMut) -> ByteStream {
     StreamingBody::new(ByteStream::new_with_size(StreamingBody::new(stream), len))
 }
 
-pub async fn upload(path: &String, file_content: BytesMut) -> bool {
-    let args = Args::parse();
-
-    let s3_params = S3Params {
-        s3_endpoint: &*args.s3_endpoint,
-        s3_bucket_name: &*args.s3_bucket_name,
-        s3_region: &*args.s3_region,
-    };
-
+pub async fn upload<'a>(
+    path: &String,
+    file_content: BytesMut,
+    s3_params: Data<S3Params<'a>>,
+) -> bool {
     let region: Region = Region::Custom {
         name: s3_params.s3_region.parse().unwrap(),
         endpoint: s3_params.s3_endpoint.parse().unwrap(),
