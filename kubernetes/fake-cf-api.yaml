@@ -1,38 +1,84 @@
-apiVersion: v1
-kind: Pod
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
 metadata:
-  name: fake-cf-api-pod
-  labels:
-    app: fake-cf-api-pod
+  name: fake-cf-api
 spec:
-  containers:
-    - name: fake-cf-api
-      image: clementreiffers/fake-cf-api
-      ports:
-        - containerPort: 8080
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fake-cf-api
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-cf-api
+  labels:
+    app: fake-cf-api
+spec:
+  selector:
+    matchLabels:
+      app: fake-cf-api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fake-cf-api
+    spec:
+      containers:
+        - name: fake-cf-api
+          image: clementreiffers/fake-cf-api:v1
+          resources:
+            limits:
+              cpu: 70m
+            requests:
+              cpu: 70m
+          ports:
+            - containerPort: 8080
+              hostPort: 8080
+          command:
+            - ./rust-fake-cf-api
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: fake-cf-api-svc
+  labels:
+    app: fake-cf-api
+  name: fake-cf-api
 spec:
+  ports:
+    - name: fake-cf-api
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
   selector:
-    app: fake-cf-api-pod
-  clusterIP: None
+    app: fake-cf-api
+  type: NodePort
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: fake-cf-api-ing
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  name: fake-cf-api
+  labels:
+    app: fake-cf-api
 spec:
   rules:
-    - host: "fake-cf-api.127.0.0.1.sslip.io"
+    - host: worker.51-159-115-150.sslip.io
       http:
         paths:
-          - backend:
+          - path: /fake-cf-api
+            pathType: Prefix
+            backend:
               service:
-                name: fake-cf-api-svc
-            path: fake-cf-api-ing
-            pathType: "Prefix"
+                name: fake-cf-api
+                port:
+                  number: 8080
+---

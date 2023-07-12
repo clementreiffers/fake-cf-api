@@ -13,3 +13,5 @@ FROM alpine AS runner
 
 COPY --from=builder ./rust-fake-cf-api ./
 
+RUN chmod +x ./rust-fake-cf-api
+

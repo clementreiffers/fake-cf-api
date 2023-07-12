@@ -6,6 +6,11 @@ pub async fn handle_user() -> String {
     "done".to_string()
 }
 
+#[get("/")]
+pub async fn get_base_message() -> String {
+    "done".to_string()
+}
+
 #[get("/client/v4/memberships")]
 pub async fn handle_memberships() -> String {
     json!({
