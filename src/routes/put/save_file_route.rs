@@ -1,19 +1,18 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::args::S3Params;
 use actix_multipart::{Field, Multipart};
-use actix_web::web::{BytesMut, Path};
+use actix_web::web::{BytesMut, Data, Path};
 use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
-use kube::{Api, Client, ResourceExt};
+use kube::Api;
 use regex::Regex;
 use serde_json::json;
 
-use crate::kube_crd::worker_account::WorkerAccount;
+use crate::args::S3Params;
 use crate::kube_crd::worker_version::{WorkerVersion, WorkerVersionSpec};
 use crate::kube_crd::{
-    create_kube_client, kube_create_worker_version, kube_get_worker_account,
-    kube_get_worker_version, kube_update_worker_version, worker_version_factory,
+    create_kube_client, kube_create_worker_version, kube_get_worker_version,
+    kube_update_worker_version, worker_version_factory,
 };
 use crate::routes::put::upload::upload;
 
@@ -65,9 +64,10 @@ fn generate_message(success: bool) -> serde_json::Value {
 }
 
 #[put("/client/v4/accounts/{accounts}/workers/scripts/{scripts}")]
-pub async fn save_file(
+pub async fn save_file<'a>(
     mut payload: Multipart,
     path: Path<(String, String)>,
+    args: Data<S3Params>,
 ) -> Result<HttpResponse, Error> {
     let (accounts, scripts) = path.into_inner();
     let timestamp = SystemTime::now()
@@ -83,7 +83,8 @@ pub async fn save_file(
         let filename = get_filename_from_field(&f);
         let file_path = format!("{}/{}", path, filename);
         if is_correct_filename(filename) {
-            let is_uploaded = upload(&file_path, file_content).await;
+            let is_uploaded = upload(&file_path, file_content, &args).await;
+            println!("save file: {}", file_path);
             if !is_uploaded {
                 return Ok(HttpResponse::Ok().body(generate_message(false).to_string()));
             }
@@ -99,8 +100,8 @@ pub async fn save_file(
             url: path,
         },
     );
-    let api: Api<WorkerVersion> = Api::default_namespaced(client);
 
+    let api: Api<WorkerVersion> = Api::default_namespaced(client);
     let result: bool = match kube_get_worker_version(&api, &worker_version).await {
         true => kube_update_worker_version(&api, &worker_version).await,
         false => kube_create_worker_version(&api, &worker_version).await,

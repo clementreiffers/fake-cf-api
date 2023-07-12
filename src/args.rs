@@ -2,18 +2,11 @@ use clap::{arg, Parser};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-pub struct Args {
+pub struct S3Params {
     #[arg(long)]
     pub(crate) s3_bucket_name: String,
     #[arg(long)]
     pub(crate) s3_endpoint: String,
     #[arg(long)]
     pub(crate) s3_region: String,
-}
-
-#[derive(Debug)]
-pub struct S3Params<'a> {
-    pub(crate) s3_bucket_name: &'a str,
-    pub(crate) s3_endpoint: &'a str,
-    pub(crate) s3_region: &'a str,
 }
