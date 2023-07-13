@@ -13,7 +13,20 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  checking-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: installing nightly
+        run: rustup toolchain install nightly
+      - name: installing udeps
+        run: cargo install cargo-udeps --locked
+      - name: checkings deps
+        run: cargo +nightly udeps --all-targets
+
   build-ubuntu:
+    needs:
+      - checking-deps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -27,6 +40,8 @@ jobs:
           name: artifact-ubuntu
           path: ubuntu
   build-macos:
+    needs:
+      - checking-deps
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -41,6 +56,8 @@ jobs:
           path: macos
 
   build-alpine:
+    needs:
+      - checking-deps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -59,6 +76,8 @@ jobs:
           path: alpine
 
   build-windows:
+    needs:
+      - checking-deps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
