@@ -14,16 +14,16 @@ env:
 
 jobs:
   build-ubuntu:
-    uses: clementreiffers/fake-cf-api/.github/workflows/rust.yml@main
+    uses: clementreiffers/fake-cf-api/.github/workflows/build-ubuntu.yml@main
   
   build-windows:
-    uses: clementreiffers/fake-cf-api/.github/workflows/build-windows.yml@v1
+    uses: clementreiffers/fake-cf-api/.github/workflows/build-windows.yml@main
 
   build-macos:
-    uses: clementreiffers/fake-cf-api/.github/workflows/build-macos.yml@v1
+    uses: clementreiffers/fake-cf-api/.github/workflows/build-macos.yml@main
 
   build-alpine:
-    uses: clementreiffers/fake-cf-api/.github/workflows/build-alpine.yml@v1
+    uses: clementreiffers/fake-cf-api/.github/workflows/build-alpine.yml@main
 
   release-project:
     name: Release Project
