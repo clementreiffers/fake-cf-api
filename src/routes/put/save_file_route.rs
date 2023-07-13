@@ -13,7 +13,7 @@ use crate::args::S3Params;
 use crate::kube_crd::worker_version::{WorkerVersion, WorkerVersionSpec};
 use crate::kube_crd::{
     create_kube_client, kube_create_worker_version, kube_get_worker_version,
-    kube_update_worker_version, worker_version_factory,
+    kube_update_worker_version,
 };
 use crate::routes::put::upload::upload;
 
@@ -94,7 +94,7 @@ pub async fn save_file<'a>(
     }
     let client = create_kube_client().await;
 
-    let worker_version = worker_version_factory(
+    let worker_version = WorkerVersion::new(
         format!("{}-{}-{}", accounts, scripts, timestamp).as_str(),
         WorkerVersionSpec {
             accounts,

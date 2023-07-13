@@ -1,5 +1,7 @@
 #![recursion_limit = "256"]
 
+use std::marker::Copy;
+
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use clap::Parser;
@@ -18,20 +20,24 @@ mod args;
 mod kube_crd;
 mod routes;
 
+fn create_s3_client(s3_params: &S3Params) -> S3Client {
+    let region: Region = Region::Custom {
+        name: s3_params.s3_region.parse().unwrap(),
+        endpoint: s3_params.s3_endpoint.parse().unwrap(),
+    };
+    S3Client::new(region)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("listening...");
-    HttpServer::new(|| {
-        let s3_params = S3Params::parse();
-        let region: Region = Region::Custom {
-            name: s3_params.s3_region.parse().unwrap(),
-            endpoint: s3_params.s3_endpoint.parse().unwrap(),
-        };
-        let client: S3Client = S3Client::new(region);
+    HttpServer::new(move || {
+        let s3_params: S3Params = S3Params::parse();
+        let s3_client: S3Client = create_s3_client(&s3_params);
 
         App::new()
             .app_data(Data::new(s3_params))
-            .app_data(Data::new(client))
+            .app_data(Data::new(s3_client))
             .service(get_base_message)
             .service(handle_user)
             .service(handle_memberships)
