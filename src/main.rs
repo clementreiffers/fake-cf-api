@@ -3,6 +3,8 @@
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use clap::Parser;
+use rusoto_core::Region;
+use rusoto_s3::S3Client;
 
 use routes::get::{get_secrets_list, handle_accounts_services, handle_subdomain, handle_user};
 use routes::post::handle_accounts_scripts;
@@ -20,8 +22,16 @@ mod routes;
 async fn main() -> std::io::Result<()> {
     println!("listening...");
     HttpServer::new(|| {
+        let s3_params = S3Params::parse();
+        let region: Region = Region::Custom {
+            name: s3_params.s3_region.parse().unwrap(),
+            endpoint: s3_params.s3_endpoint.parse().unwrap(),
+        };
+        let client: S3Client = S3Client::new(region);
+
         App::new()
-            .app_data(Data::new(S3Params::parse()))
+            .app_data(Data::new(s3_params))
+            .app_data(Data::new(client))
             .service(get_base_message)
             .service(handle_user)
             .service(handle_memberships)

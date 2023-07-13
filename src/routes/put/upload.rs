@@ -1,5 +1,5 @@
 use actix_web::web::{BytesMut, Data};
-use rusoto_core::{ByteStream, Region};
+use rusoto_core::ByteStream;
 use rusoto_s3::{PutObjectRequest, S3Client, StreamingBody, S3};
 
 use crate::args::S3Params;
@@ -12,16 +12,14 @@ fn create_streaming_body(file_content: BytesMut) -> ByteStream {
     StreamingBody::new(ByteStream::new_with_size(StreamingBody::new(stream), len))
 }
 
-pub async fn upload<'a>(path: &String, file_content: BytesMut, args: &Data<S3Params>) -> bool {
-    let region: Region = Region::Custom {
-        name: args.s3_region.parse().unwrap(),
-        endpoint: args.s3_endpoint.parse().unwrap(),
-    };
-
-    let client: S3Client = S3Client::new(region);
-
+pub async fn upload<'a>(
+    path: &String,
+    file_content: BytesMut,
+    s3_params: &Data<S3Params>,
+    client: &Data<S3Client>,
+) -> bool {
     let request = PutObjectRequest {
-        bucket: args.s3_bucket_name.parse().unwrap(),
+        bucket: s3_params.s3_bucket_name.parse().unwrap(),
         key: path.to_owned(),
         body: Some(create_streaming_body(file_content)),
         ..Default::default()
