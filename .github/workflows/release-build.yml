@@ -42,15 +42,23 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Download artifacts artifact content
+      - name: Download windows artifact 
         uses: actions/download-artifact@v2
         with:
-          name:
+          name: artifact-windows
+      - name: Download ubuntu artifact 
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact-ubuntu
+      - name: Download alpine artifact 
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact-alpine
+      - name: Download macos artifact 
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact-macos
       
-      
-      - name: view files downloaded
-        run: ls
-              
       - name: Upload ubuntu release asset
         uses: actions/upload-release-asset@v1
         env:
