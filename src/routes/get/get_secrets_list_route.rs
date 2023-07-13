@@ -3,6 +3,7 @@ use kube::api::ListParams;
 use kube::Api;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tracing::error;
 
 use crate::kube_crd::create_kube_client;
 
@@ -35,7 +36,7 @@ pub async fn get_secrets_list(path: web::Path<(String, String)>) -> HttpResponse
                 .collect()
         })
         .map_err(|err| {
-            eprintln!("Error retrieving secrets: {:?}", err);
+            error!("Error retrieving secrets: {:?}", err);
             err
         });
 

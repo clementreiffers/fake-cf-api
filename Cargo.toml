@@ -10,6 +10,7 @@ base64 = "0.21.2"
 chrono = "0.4.26"
 clap = { version = "4.3.11", features = ["derive"] }
 dotenv = "0.15.0"
+env_logger = "0.10.0"
 futures = "0.3.28"
 k8s-openapi = { version = "0.18.0", features = ["v1_26"] }
 kube = { version = "0.83.0", features = ["derive"] }
@@ -25,6 +26,9 @@ serde = "1.0.164"
 serde_json = "1.0.97"
 tokio = "1.28.2"
 tokio-util = "0.7.8"
+tracing = "0.1.37"
+tracing-actix-web = "0.7.5"
+tracing-subscriber = "0.3.17"
 
 [package.metadata]
 watch = ["cargo", "watch", "-x", "run"]

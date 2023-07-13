@@ -1,12 +1,12 @@
 #![recursion_limit = "256"]
 
-use std::marker::Copy;
-
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use clap::Parser;
+use env_logger::Env;
 use rusoto_core::Region;
 use rusoto_s3::S3Client;
+use tracing_actix_web::TracingLogger;
 
 use routes::get::{get_secrets_list, handle_accounts_services, handle_subdomain, handle_user};
 use routes::post::handle_accounts_scripts;
@@ -30,11 +30,10 @@ fn create_s3_client(s3_params: &S3Params) -> S3Client {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("listening...");
-    HttpServer::new(move || {
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+    HttpServer::new(|| {
         let s3_params: S3Params = S3Params::parse();
         let s3_client: S3Client = create_s3_client(&s3_params);
-
         App::new()
             .app_data(Data::new(s3_params))
             .app_data(Data::new(s3_client))
@@ -48,6 +47,7 @@ async fn main() -> std::io::Result<()> {
             .service(save_file)
             .service(new_secret)
             .service(delete_secrets)
+            .wrap(TracingLogger::default())
     })
     .bind(("127.0.0.1", 8080))?
     .run()
