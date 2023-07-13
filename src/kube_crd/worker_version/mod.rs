@@ -45,7 +45,3 @@ pub async fn kube_get_worker_version(
 ) -> bool {
     api.get(&worker_version.name_any()).await.is_ok()
 }
-
-pub fn worker_version_factory(name: &str, spec: WorkerVersionSpec) -> WorkerVersion {
-    WorkerVersion::new(name, spec)
-}

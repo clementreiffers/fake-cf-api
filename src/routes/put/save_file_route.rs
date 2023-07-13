@@ -6,13 +6,14 @@ use actix_web::{put, Error, HttpResponse};
 use futures::StreamExt;
 use kube::Api;
 use regex::Regex;
+use rusoto_s3::S3Client;
 use serde_json::json;
 
 use crate::args::S3Params;
 use crate::kube_crd::worker_version::{WorkerVersion, WorkerVersionSpec};
 use crate::kube_crd::{
     create_kube_client, kube_create_worker_version, kube_get_worker_version,
-    kube_update_worker_version, worker_version_factory,
+    kube_update_worker_version,
 };
 use crate::routes::put::upload::upload;
 
@@ -68,6 +69,7 @@ pub async fn save_file<'a>(
     mut payload: Multipart,
     path: Path<(String, String)>,
     args: Data<S3Params>,
+    client: Data<S3Client>,
 ) -> Result<HttpResponse, Error> {
     let (accounts, scripts) = path.into_inner();
     let timestamp = SystemTime::now()
@@ -83,7 +85,7 @@ pub async fn save_file<'a>(
         let filename = get_filename_from_field(&f);
         let file_path = format!("{}/{}", path, filename);
         if is_correct_filename(filename) {
-            let is_uploaded = upload(&file_path, file_content, &args).await;
+            let is_uploaded = upload(&file_path, file_content, &args, &client).await;
             println!("save file: {}", file_path);
             if !is_uploaded {
                 return Ok(HttpResponse::Ok().body(generate_message(false).to_string()));
@@ -92,7 +94,7 @@ pub async fn save_file<'a>(
     }
     let client = create_kube_client().await;
 
-    let worker_version = worker_version_factory(
+    let worker_version = WorkerVersion::new(
         format!("{}-{}-{}", accounts, scripts, timestamp).as_str(),
         WorkerVersionSpec {
             accounts,
