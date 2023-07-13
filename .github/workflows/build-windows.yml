@@ -1,17 +1,12 @@
 name: Build Windows
 
+
 on:
   workflow_call:
-      # Map the workflow outputs to job outputs
       outputs:
           artifact:
               description: "Executable for Ubuntu"
               value: ${{ jobs.build.result.release_name }}
-  push:
-      branches: [ "main" ]
-  pull_request:
-      branches: [ "main" ]
-
 permissions:
   contents: write
 
