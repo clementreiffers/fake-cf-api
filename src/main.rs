@@ -1,5 +1,6 @@
 #![recursion_limit = "256"]
 
+use actix_web::dev::ServiceFactory;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use clap::Parser;
