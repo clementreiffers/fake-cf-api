@@ -13,95 +13,17 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check-code:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: checking code
-        run: cargo check
-
-  checking-deps:
-    runs-on: ubuntu-latest
-    needs:
-      - check-code
-    steps:
-      - uses: actions/checkout@v3
-      - name: installing nightly
-        run: rustup toolchain install nightly
-      - name: installing udeps
-        run: cargo install cargo-udeps --locked
-      - name: checkings deps
-        run: cargo +nightly udeps --all-targets
-
   build-ubuntu:
-    needs:
-      - checking-deps
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build
-        run: cargo build --release
-      - name: move executable to root
-        run: mv ./target/release/rust-fake-cf-api ./ubuntu
-      - name: upload artifact release
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifact-ubuntu
-          path: ubuntu
+    uses: clementreiffers/fake-cf-api/.github/workflows/rust.yml@main
+  
+  build-windows:
+    uses: clementreiffers/fake-cf-api/.github/workflows/build-windows.yml@v1
+
   build-macos:
-    needs:
-      - checking-deps
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build
-        run: cargo build --release
-      - name: move executable to root
-        run: mv ./target/release/rust-fake-cf-api ./macos
-      - name: upload artifact release
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifact-macos
-          path: macos
+    uses: clementreiffers/fake-cf-api/.github/workflows/build-macos.yml@v1
 
   build-alpine:
-    needs:
-      - checking-deps
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: installing toolchains
-        run: rustup target add x86_64-unknown-linux-musl
-      - name: installing musl-tools
-        run: sudo apt update && sudo apt install -y musl-tools
-      - name: build
-        run: cargo build --target=x86_64-unknown-linux-musl --release
-      - name: move executable to root
-        run: mv ./target/x86_64-unknown-linux-musl/release/rust-fake-cf-api ./alpine
-      - name: upload artifact release
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifact-alpine
-          path: alpine
-
-  build-windows:
-    needs:
-      - checking-deps
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: installing toolchains
-        run: rustup target add x86_64-pc-windows-gnu
-      - name: installing mingw
-        run: sudo apt update && sudo apt install -y gcc-mingw-w64
-      - name: build
-        run: cargo build --target x86_64-pc-windows-gnu --release
-      - name: upload artifact release
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifact-windows
-          path: ./target/x86_64-pc-windows-gnu/release/rust-fake-cf-api.exe
-
+    uses: clementreiffers/fake-cf-api/.github/workflows/build-alpine.yml@v1
 
   release-project:
     name: Release Project
@@ -123,19 +45,19 @@ jobs:
       - name: Download ubuntu artifact content
         uses: actions/download-artifact@v2
         with:
-          name: artifact-ubuntu
+          name: ${{ needs.build-alpine.outputs.release_name }}
       - name: Download windows artifact content
         uses: actions/download-artifact@v2
         with:
-          name: artifact-windows
+          name: ${{ needs.build-windows.outputs.release_name }}
       - name: Download macos artifact content
         uses: actions/download-artifact@v2
         with:
-          name: artifact-macos
+          name: ${{ needs.build-macos.outputs.release_name }}
       - name: Download alpine artifact content
         uses: actions/download-artifact@v2
         with:
-          name: artifact-alpine
+          name: ${{ needs.build-ubuntu.outputs.release_name }}
 
 
 
