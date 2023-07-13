@@ -8,6 +8,7 @@ use kube::Api;
 use regex::Regex;
 use rusoto_s3::S3Client;
 use serde_json::json;
+use tracing::info;
 
 use crate::args::S3Params;
 use crate::kube_crd::worker_version::{WorkerVersion, WorkerVersionSpec};
@@ -86,7 +87,7 @@ pub async fn save_file<'a>(
         let file_path = format!("{}/{}", path, filename);
         if is_correct_filename(filename) {
             let is_uploaded = upload(&file_path, file_content, &args, &client).await;
-            println!("save file: {}", file_path);
+            info!("save file: {}", file_path);
             if !is_uploaded {
                 return Ok(HttpResponse::Ok().body(generate_message(false).to_string()));
             }

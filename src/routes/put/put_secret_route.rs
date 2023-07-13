@@ -7,6 +7,7 @@ use kube::api::PostParams;
 use kube::Api;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tracing::{error, info};
 
 use crate::kube_crd::create_kube_client;
 
@@ -77,8 +78,8 @@ pub async fn new_secret(path: Path<(String, String)>, bytes: Bytes) -> HttpRespo
     let message = generate_new_secret_message(values.name, result);
 
     match result {
-        true => println!("adding secrets for accounts {accounts}.{scripts} done!"),
-        false => println!("cannot adding secrets for {accounts}.{scripts} failed"),
+        true => info!("adding secrets for accounts {accounts}.{scripts} done!"),
+        false => error!("cannot adding secrets for {accounts}.{scripts} failed"),
     };
     HttpResponse::Ok().body(message.to_string())
 }
