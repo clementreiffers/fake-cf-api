@@ -11,7 +11,7 @@ jobs:
   release-build:
     uses: clementreiffers/fake-cf-api/.github/workflows/release-build.yml@main
 
-  docker:
+  build-push-image:
     runs-on: ubuntu-latest
     needs: [ "release-build" ]
     steps:
