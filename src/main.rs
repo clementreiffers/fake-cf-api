@@ -1,6 +1,6 @@
 #![recursion_limit = "256"]
 
-use actix_web::dev::ServiceFactory;
+use actix_web::http::header;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use clap::Parser;
@@ -9,6 +9,7 @@ use rusoto_core::Region;
 use rusoto_s3::S3Client;
 use tracing_actix_web::TracingLogger;
 
+use actix_cors::Cors;
 use routes::get::{get_secrets_list, handle_accounts_services, handle_subdomain, handle_user};
 use routes::post::handle_accounts_scripts;
 use routes::put::{new_secret, save_file};
@@ -35,6 +36,13 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         let s3_params: S3Params = S3Params::parse();
         let s3_client: S3Client = create_s3_client(&s3_params);
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:8080")
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+            .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+            .allowed_header(header::CONTENT_TYPE)
+            .supports_credentials()
+            .max_age(3600);
         App::new()
             .app_data(Data::new(s3_params))
             .app_data(Data::new(s3_client))
@@ -49,6 +57,7 @@ async fn main() -> std::io::Result<()> {
             .service(new_secret)
             .service(delete_secrets)
             .wrap(TracingLogger::default())
+            .wrap(cors)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
