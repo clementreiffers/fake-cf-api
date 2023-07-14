@@ -29,6 +29,15 @@ fn create_s3_client(s3_params: &S3Params) -> S3Client {
     };
     S3Client::new(region)
 }
+fn set_cors_policy() -> Cors {
+    Cors::default()
+        .allowed_origin("http://localhost:8080")
+        .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+        .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+        .allowed_header(header::CONTENT_TYPE)
+        .supports_credentials()
+        .max_age(3600)
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -36,13 +45,6 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         let s3_params: S3Params = S3Params::parse();
         let s3_client: S3Client = create_s3_client(&s3_params);
-        let cors = Cors::default()
-            .allowed_origin("http://localhost:8080")
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-            .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
-            .allowed_header(header::CONTENT_TYPE)
-            .supports_credentials()
-            .max_age(3600);
         App::new()
             .app_data(Data::new(s3_params))
             .app_data(Data::new(s3_client))
@@ -57,7 +59,7 @@ async fn main() -> std::io::Result<()> {
             .service(new_secret)
             .service(delete_secrets)
             .wrap(TracingLogger::default())
-            .wrap(cors)
+            .wrap(set_cors_policy())
     })
     .bind(("127.0.0.1", 8080))?
     .run()
