@@ -1,21 +1,19 @@
 name: Release Builds
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_call:
+    outputs:
+      build_number:
+        description: "the release build number"
+        value: ${{ github.run_number }}
 
 permissions:
   contents: write
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build-ubuntu:
     uses: clementreiffers/fake-cf-api/.github/workflows/build-ubuntu.yml@main
-  
+
   build-windows:
     uses: clementreiffers/fake-cf-api/.github/workflows/build-windows.yml@main
 
@@ -42,23 +40,23 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Download windows artifact 
+      - name: Download windows artifact
         uses: actions/download-artifact@v2
         with:
           name: artifact-windows
-      - name: Download ubuntu artifact 
+      - name: Download ubuntu artifact
         uses: actions/download-artifact@v2
         with:
           name: artifact-ubuntu
-      - name: Download alpine artifact 
+      - name: Download alpine artifact
         uses: actions/download-artifact@v2
         with:
           name: artifact-alpine
-      - name: Download macos artifact 
+      - name: Download macos artifact
         uses: actions/download-artifact@v2
         with:
           name: artifact-macos
-      
+
       - name: Upload ubuntu release asset
         uses: actions/upload-release-asset@v1
         env:
@@ -98,4 +96,3 @@ jobs:
           asset_path: macos
           asset_name: fake-cf-api-release-macos-v${{ github.run_number }}
           asset_content_type: application/octet-stream
-
